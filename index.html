@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buka barber</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: black;
+      color: yellow;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px;
+      font-size: 36px;
+      font-weight: bold;
+      border-bottom: 3px solid yellow;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: yellow;
+      padding: 10px;
+      border-bottom: 2px solid black;
+    }
+
+    nav button {
+      background-color: black;
+      color: yellow;
+      border: 2px solid yellow;
+      padding: 10px 15px;
+      margin: 0 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    nav button:hover {
+      background-color: yellow;
+      color: black;
+    }
+
+    section {
+      padding: 40px 20px;
+      border-bottom: 2px solid yellow;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .services ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .services li {
+      margin: 10px 0;
+      font-size: 18px;
+    }
+
+    .appointment input, .appointment button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    .appointment button {
+      background-color: yellow;
+      color: black;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .appointment button:hover {
+      background-color: yellow;
+    }
+
+    .appointments-list {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .appointments-list ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .appointments-list li {
+      padding: 5px;
+      border-bottom: 1px solid yellow;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      border-top: 2px solid yellow;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>Buka Barber</header>
+
+  <nav>
+    <button onclick="scrollToSection('about')">О нас</button>
+    <button onclick="scrollToSection('services')">Услуги</button>
+    <button onclick="scrollToSection('appointment')">Запись</button>
+    <button onclick="toggleClients()">Показать клиентов</button>
+  </nav>
+
+  <section id="about" class="about">
+    <h2>О нас</h2>
+    <p>Добро пожаловать в Buka Barber! Мы предоставляем профессиональные услуги стрижки и бритья с индивидуальным подходом к каждому клиенту.</p>
+    <p>Телефон: <strong>+998 90 084 15 51</strong></p>
+  </section>
+
+  <section id="services" class="services">
+    <h2>Услуги</h2>
+    <ul>
+      <li>Мужская стрижка</li>
+      <li>Оформление бороды</li>
+      <li>Бритье опасной бритвой</li>
+      <li>Стрижка машинкой</li>
+      <li>Массаж головы</li>
+      <li>Комплекс: стрижка + борода</li>
+    </ul>
+  </section>
+
+  <section id="appointment" class="appointment">
+    <h2>Записаться</h2>
+    <input type="text" id="name" placeholder="Ваше имя">
+    <input type="datetime-local" id="datetime">
+    <button onclick="bookAppointment()">Записаться</button>
+    <p id="confirmation" style="margin-top: 10px; color: yellow;"></p>
+  </section>
+
+  <section id="appointments" class="appointments-list">
+    <h2>Записанные клиенты</h2>
+    <ul id="appointmentsList"></ul>
+  </section>
+
+  <footer>
+    &copy; 2025 Buka Barber. Все права защищены.
+  </footer>
+
+  <script>
+    let appointments = JSON.parse(localStorage.getItem('appointments') || '[]');
+
+    function saveAppointments() {
+      localStorage.setItem('appointments', JSON.stringify(appointments));
+    }
+
+    function bookAppointment() {
+      const name = document.getElementById('name').value;
+      const datetime = document.getElementById('datetime').value;
+      const confirmation = document.getElementById('confirmation');
+      const time = new Date(datetime);
+
+      if (!name || !datetime) {
+        confirmation.textContent = 'Пожалуйста, заполните все поля.';
+        return;
+      }
+
+      const isTaken = appointments.some(appt => {
+        const apptTime = new Date(appt.time);
+        return Math.abs(time - new Date(apptTime)) < 30 * 60 * 1000;
+      });
+
+      if (isTaken) {
+        confirmation.textContent = 'Это время уже забронировано. Пожалуйста, выберите другое время.';
+        return;
+      }
+
+      appointments.push({ name, time });
+      saveAppointments();
+      confirmation.textContent = `Спасибо, ${name}! Вы записаны на ${time.toLocaleString()}.`;
+      renderAppointments();
+    }
+
+    function renderAppointments() {
+      const list = document.getElementById('appointmentsList');
+      list.innerHTML = '';
+      appointments.forEach(appt => {
+        const li = document.createElement('li');
+        li.textContent = `${appt.name} - ${new Date(appt.time).toLocaleString()}`;
+        list.appendChild(li);
+      });
+    }
+
+    function scrollToSection(id) {
+      document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleClients() {
+      const section = document.getElementById('appointments');
+      const password = prompt('Введите пароль для просмотра клиентов:');
+      if (password === 'shaxa123') {
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+      } else {
+        alert('Неверный пароль.');
+      }
+    }
+
+    // Загружаем записи при загрузке страницы
+    window.onload = renderAppointments;
+  </script>
+</body>
+</html>
